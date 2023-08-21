@@ -7,7 +7,9 @@ import com.zdf.client.task.LarkTask;
 
 public class Main {
     public static void main(String[] args) {
+        // 进行配置
         Launch l = new AppLaunch(LarkTask.class);
+        // 启动
         l.start();
     }
 }

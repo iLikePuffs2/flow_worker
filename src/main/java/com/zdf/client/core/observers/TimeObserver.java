@@ -16,6 +16,7 @@ import com.zdf.client.enums.TaskStatus;
 import java.util.List;
 import java.util.UUID;
 
+// 这是一个具体的观察者，它在任务获取、执行、完成、停止和出错时分别进行相应的处理
 public class TimeObserver implements ObserverFunction{
     private Long beginTime;
     TaskFlower taskFlower = new TaskFlowerImpl();

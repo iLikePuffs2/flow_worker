@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+// 调用 server 接口的具体实现(使用OkHttp库来发送HTTP请求)
 public class FlowServerImpl implements FlowServer {
     OkHttpClient client = new OkHttpClient();
 

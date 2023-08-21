@@ -11,6 +11,7 @@ import com.zdf.client.rpc.FlowServerImpl;
 import java.util.List;
 
 public class TaskFlowerImpl implements TaskFlower{
+    // 使用FlowServer来执行任务管理
     FlowServer flowServer = new FlowServerImpl();
     @Override
     public String createTask(AsyncTaskRequest asyncTaskRequest) {

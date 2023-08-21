@@ -10,7 +10,6 @@ import com.zdf.client.core.ObserverManager;
 import com.zdf.client.core.observers.TimeObserver;
 import com.zdf.client.data.*;
 import com.zdf.client.enums.TaskStatus;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -49,16 +48,19 @@ public class AppLaunch implements Launch{
         this.packageName = taskType.getPackage().getName();
         this.scheduleLimit = scheduleLimit;
         this.threadPoolExecutor = Executors.newScheduledThreadPool(MaxConcurrentRunTimes);
+        // 构造方法里调用 init
         init();
     }
 
     @Override
     public int start() {
+        // 拿到任务配置
         ScheduleConfig scheduleConfig = scheduleCfgDic.get(this.taskType);
-        // take the task at fixed rate
+
+        // 取出任务配置里的"调度间隔 interval"
         intervalTime = scheduleConfig.getSchedule_interval() == 0 ? TaskConstant.DEFAULT_TIME_INTERVAL * 1000L : scheduleConfig.getSchedule_interval() * 1000L;
         for (int i = 0; i < concurrentRunTimes; i++) {
-            // 前后波动500ms
+            // 定时执行 execute 方法
             int step = (int) (Math.random() * 500 + 1);
             intervalTime += step;
             threadPoolExecutor.scheduleAtFixedRate(this::execute, step * 3L, intervalTime, TimeUnit.MILLISECONDS);
@@ -67,7 +69,9 @@ public class AppLaunch implements Launch{
     }
 
     public void execute() {
+        // 观察者模式的主题
         ObserverManager observerManager = new ObserverManager();
+        // 注册一个具体观察者
         observerManager.registerEventObserver(new TimeObserver());
         try {
             observerManager.wakeupObserver(ObserverType.onBoot);
@@ -75,6 +79,7 @@ public class AppLaunch implements Launch{
             e.printStackTrace();
         }
 
+        // 抢锁+拉取一批任务
         List<AsyncTaskBase> asyncTaskBaseList = getAsyncTaskBases(observerManager);
         if (asyncTaskBaseList == null || asyncTaskBaseList.size() == 0) {
             return;
@@ -138,6 +143,9 @@ public class AppLaunch implements Launch{
         return null;
     }
 
+    /**
+     * 拿到所有的任务配置信息,装入map
+     */
     private void loadCfg() {
         TaskFlower taskFlower = new TaskFlowerImpl();
         List<ScheduleConfig> taskTypeCfgList = taskFlower.getTaskTypeCfgList();
@@ -148,6 +156,7 @@ public class AppLaunch implements Launch{
 
     @Override
     public int init() {
+        // 先加载配置
         loadCfg();
         if (scheduleLimit != 0) {
             logger.debug("init ScheduleLimit : %d", scheduleLimit);
@@ -157,6 +166,7 @@ public class AppLaunch implements Launch{
             this.scheduleLimit = this.scheduleCfgDic.get(this.taskType).getSchedule_limit();
         }
 
+        // 每隔一段时间就重新加载配置
         threadPoolExecutor.scheduleAtFixedRate(this::loadCfg, cycleScheduleConfigTime, cycleScheduleConfigTime,TimeUnit.MILLISECONDS);
         return 0;
     }
